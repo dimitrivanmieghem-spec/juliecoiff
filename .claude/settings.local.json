@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(taskkill /PID 33092 /F)",
+      "PowerShell(Stop-Process *)",
+      "Bash(taskkill *)",
+      "Bash(node -e \"require\\('zod'\\)\")",
+      "Bash(git init *)",
+      "Bash(git config *)",
+      "Bash(git remote *)",
+      "Bash(git branch *)",
+      "Bash(git add *)"
+    ]
+  }
+}
