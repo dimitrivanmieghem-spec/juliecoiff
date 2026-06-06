@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { MessageCircle, X, ChevronRight, Mail } from "lucide-react";
 
 const QUICK_REPLIES = [
@@ -32,7 +33,10 @@ function WAIcon({ className }: { className?: string }) {
 // z-50 : Chat panel (bottom-56 = 224px → above buttons at 160+56=216px)
 
 export default function FloatingButtons() {
+  const pathname = usePathname();
   const [chatOpen, setChatOpen] = useState(false);
+
+  if (pathname?.startsWith("/admin")) return null;
   const [messages, setMessages] = useState<Msg[]>([
     { from: "bot", text: "Bonjour ! Je suis l'assistante Julie Coiff. Comment puis-je vous aider ?" },
   ]);
