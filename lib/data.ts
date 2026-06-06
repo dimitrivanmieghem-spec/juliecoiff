@@ -70,11 +70,11 @@ export function haversineKm(lat1: number, lng1: number, lat2: number, lng2: numb
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export function getTravelFee(postalCode: string): number {
+export function getTravelFee(postalCode: string): number | null {
   if (["7180", "7181", "7170"].includes(postalCode)) return 0;
   if (["6230", "7190"].includes(postalCode))          return 8;
   if (["1400", "7100", "7110", "7060"].includes(postalCode)) return 15;
-  return 15;
+  return null;
 }
 
 export function zoneIdFromKm(km: number): string {

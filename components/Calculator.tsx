@@ -6,11 +6,7 @@ import { ChevronLeft, ChevronRight, CheckCircle, Clock, Palette, MapPin } from "
 import {
   BASE_SERVICES,
   ADDONS,
-  ZONES,
-  SENEFFE,
   formatDuration,
-  haversineKm,
-  zoneIdFromKm,
   getTravelFee,
   type Service,
 } from "@/lib/data";
@@ -40,17 +36,6 @@ type FieldErrors = Partial<Record<keyof z.infer<typeof bookingSchema>, string>>;
 
 const addonCategories = Array.from(new Set(ADDONS.map((a) => a.category)));
 
-function computeTravel(distanceKm: number, subTotal: number): {
-  nominalFee: number; travelFee: number; travelOffered: boolean; zoneLabel: string;
-} {
-  const d = distanceKm;
-  if (d <= 8)  return { nominalFee: 0,  travelFee: 0,  travelOffered: false, zoneLabel: "Zone 1 (0-8 km) — Déplacement offert" };
-  if (d <= 15) { const o = subTotal >= 80; return { nominalFee: 5, travelFee: o ? 0 : 5, travelOffered: o, zoneLabel: "Zone 2 (8-15 km) — +5€ (Offerts dès 80€)" }; }
-  if (d <= 25) return { nominalFee: 12, travelFee: 12, travelOffered: false, zoneLabel: "Zone 3 (15-25 km) — +12€" };
-  const fee = Math.ceil(d * 2 * 0.5);
-  return { nominalFee: fee, travelFee: fee, travelOffered: false, zoneLabel: `Hors Zone standard — +${fee}€` };
-}
-
 type WizardStep = 1 | 2 | 3 | "success";
 
 export default function Calculator() {
@@ -62,8 +47,6 @@ export default function Calculator() {
   }, [wizardStep]);
   const [selectedBaseId, setSelectedBaseId]     = useState<string | null>(null);
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
-  const [distanceKm, setDistanceKm]             = useState<number>(0);
-  const [selectedZoneId, setSelectedZoneId]     = useState<string>(ZONES[0].id);
   const [clientCoords, setClientCoords]         = useState<ClientCoords | null>(null);
   const [selectedDateTime, setSelectedDateTime] = useState<{ date: string; time: string } | null>(null);
 
@@ -87,7 +70,10 @@ export default function Calculator() {
   const addonsEnabled  = selectedBase?.category === "Femme";
   const needsColorInfo = selectedAddonIds.includes("a2") || selectedAddonIds.includes("a4");
 
-  const { subTotal, travelFee, total, totalDuration, zoneLabel } =
+  const postalFee        = fieldPostalCode ? getTravelFee(fieldPostalCode) : null;
+  const zoneOutOfCoverage = addressConfirmed && postalFee === null;
+
+  const { subTotal, travelFee, total, totalDuration } =
     useMemo(() => {
       const basePrice    = selectedBase?.price    ?? 0;
       const baseDuration = selectedBase?.duration ?? 0;
@@ -96,12 +82,11 @@ export default function Calculator() {
       const addonDur     = addonList.reduce((s, a) => s + a.duration, 0);
       const sub          = basePrice + addonPrice;
       const dur          = baseDuration + addonDur;
-      const { zoneLabel } = computeTravel(distanceKm, sub);
-      const fee          = fieldPostalCode ? getTravelFee(fieldPostalCode) : 0;
-      return { subTotal: sub, totalDuration: dur, zoneLabel, travelFee: fee, total: sub + fee };
-    }, [selectedBase, selectedAddonIds, distanceKm, fieldPostalCode]);
+      const fee          = fieldPostalCode ? (getTravelFee(fieldPostalCode) ?? 0) : 0;
+      return { subTotal: sub, totalDuration: dur, travelFee: fee, total: sub + fee };
+    }, [selectedBase, selectedAddonIds, fieldPostalCode]);
 
-  const canStep1Continue = selectedBaseId !== null && addressConfirmed;
+  const canStep1Continue = selectedBaseId !== null && addressConfirmed && !zoneOutOfCoverage;
 
   const isFormValid =
     fieldName.trim().length > 0 &&
@@ -117,9 +102,6 @@ export default function Calculator() {
   }
 
   function handleAddressSelect(lat: number, lng: number, cityName: string, street: string, postalCode: string) {
-    const km = haversineKm(SENEFFE.lat, SENEFFE.lng, lat, lng);
-    setDistanceKm(km);
-    setSelectedZoneId(zoneIdFromKm(km));
     setClientCoords({ lat, lng, name: cityName });
     setFieldStreet(street);
     setFieldPostalCode(postalCode);
@@ -131,8 +113,6 @@ export default function Calculator() {
     setFieldStreet("");
     setFieldPostalCode("");
     setAddressConfirmed(false);
-    setDistanceKm(0);
-    setSelectedZoneId(ZONES[0].id);
   }
 
   function advanceStep() {
@@ -187,8 +167,6 @@ export default function Calculator() {
     setWizardStep(1);
     setSelectedBaseId(null);
     setSelectedAddonIds([]);
-    setDistanceKm(0);
-    setSelectedZoneId(ZONES[0].id);
     setClientCoords(null);
     setSelectedDateTime(null);
     setAddressConfirmed(false);
@@ -295,10 +273,19 @@ export default function Calculator() {
                 <div className="space-y-3">
                   <AddressAutocomplete onAddressSelect={handleAddressSelect} onClear={handleAddressClear} />
                   <p className="text-xs px-1" aria-live="polite">
-                    {clientCoords
-                      ? <span className="font-medium text-primary">{zoneLabel}</span>
-                      : <span className="text-text-main/40">Saisissez votre adresse pour détecter votre zone automatiquement.</span>
-                    }
+                    {!clientCoords && (
+                      <span className="text-text-main/40">Saisissez votre adresse pour vérifier la zone de déplacement.</span>
+                    )}
+                    {clientCoords && !zoneOutOfCoverage && (
+                      <span className="font-medium text-primary">
+                        {postalFee === 0 ? "Zone 1 — Déplacement inclus" : `Zone couverte — +${postalFee}€ de déplacement`}
+                      </span>
+                    )}
+                    {zoneOutOfCoverage && (
+                      <span className="text-red-500">
+                        Zone non couverte. Veuillez contacter Julie au 0484/66.68.92 pour une demande exceptionnelle.
+                      </span>
+                    )}
                   </p>
                 </div>
                 <div className="mt-5">
@@ -316,7 +303,11 @@ export default function Calculator() {
                 </button>
                 {!canStep1Continue && (
                   <p className="mt-2 text-xs text-text-main/40 text-center">
-                    {!selectedBase ? "Choisissez une prestation." : "Sélectionnez votre adresse dans la liste pour continuer."}
+                    {!selectedBase
+                      ? "Choisissez une prestation."
+                      : zoneOutOfCoverage
+                      ? "Zone non couverte — impossible de continuer."
+                      : "Sélectionnez votre adresse dans la liste pour continuer."}
                   </p>
                 )}
               </div>
@@ -709,10 +700,6 @@ function BookingSummary({
 
         <p className="mt-4 text-xs text-text-main/50 text-center leading-relaxed">
           Réduction de 10% sur présentation d&apos;une carte étudiante valide.
-        </p>
-        <p className="mt-3 text-xs text-text-main/40 leading-relaxed border-t border-primary/10 pt-3">
-          *Les frais de déplacement au-delà de 15 km ne sont pas soumis à la gratuité sur volume.
-          Au-delà de 25 km, calculés sur une base de 0,50€/km (aller-retour).*
         </p>
       </div>
     </aside>
