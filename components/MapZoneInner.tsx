@@ -1,30 +1,11 @@
 "use client";
-// components/MapZoneInner.tsx  (loaded dynamically — SSR disabled)
 
 import { useEffect, useRef } from "react";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import type { ClientCoords } from "./MapZone";
 
-const CENTER: L.LatLngTuple = [50.528, 4.258];
-
-const zones: { label: string; radius: number; options: L.CircleOptions }[] = [
-  {
-    label: "Zone 1 — Gratuit",
-    radius: 8000,
-    options: { color: "#b85d38", fillColor: "#b85d38", fillOpacity: 0.15, weight: 2 },
-  },
-  {
-    label: "Zone 2 — +5€",
-    radius: 15000,
-    options: { color: "#d67a50", fillColor: "#d67a50", fillOpacity: 0.08, weight: 2, dashArray: "5, 5" },
-  },
-  {
-    label: "Zone 3 — +10€",
-    radius: 25000,
-    options: { color: "#e8bba6", fillColor: "#e8bba6", fillOpacity: 0.04, weight: 1.5, dashArray: "4, 6" },
-  },
-];
+const BASE_COORDS: [number, number] = [50.5287, 4.2594];
 
 const centerIcon = L.divIcon({
   className: "bg-transparent",
@@ -45,12 +26,11 @@ interface Props {
 }
 
 export default function MapZoneInner({ clientCoords }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const clientMarkerRef = useRef<L.Marker | null>(null);
-  const clientPolylineRef = useRef<L.Polyline | null>(null);
+  const containerRef       = useRef<HTMLDivElement>(null);
+  const mapRef             = useRef<L.Map | null>(null);
+  const clientMarkerRef    = useRef<L.Marker | null>(null);
+  const clientPolylineRef  = useRef<L.Polyline | null>(null);
 
-  // Init map once
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -58,7 +38,7 @@ export default function MapZoneInner({ clientCoords }: Props) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (container as any)._leaflet_id;
 
-    const map = L.map(container, { center: CENTER, zoom: 10, scrollWheelZoom: false });
+    const map = L.map(container, { center: BASE_COORDS, zoom: 11, scrollWheelZoom: false });
     mapRef.current = map;
 
     L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
@@ -68,13 +48,7 @@ export default function MapZoneInner({ clientCoords }: Props) {
       maxZoom: 19,
     }).addTo(map);
 
-    [...zones].reverse().forEach(({ label, radius, options }) => {
-      L.circle(CENTER, { radius, ...options })
-        .addTo(map)
-        .bindTooltip(label, { sticky: true, className: "leaflet-tooltip-custom" });
-    });
-
-    L.marker(CENTER, { icon: centerIcon })
+    L.marker(BASE_COORDS, { icon: centerIcon })
       .addTo(map)
       .bindTooltip("Julie Coiff — Seneffe", {
         permanent: true,
@@ -89,7 +63,6 @@ export default function MapZoneInner({ clientCoords }: Props) {
     };
   }, []);
 
-  // Update client marker + polyline when coords change
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -99,25 +72,25 @@ export default function MapZoneInner({ clientCoords }: Props) {
     clientPolylineRef.current?.remove();
     clientPolylineRef.current = null;
 
-    if (!clientCoords) return;
+    if (!clientCoords) {
+      map.setView(BASE_COORDS, 11);
+      return;
+    }
 
     const { lat, lng, name } = clientCoords;
+    const clientPos: [number, number] = [lat, lng];
 
-    clientPolylineRef.current = L.polyline([CENTER, [lat, lng]], {
+    clientPolylineRef.current = L.polyline([BASE_COORDS, clientPos], {
       color: "#b85d38",
-      weight: 2,
-      dashArray: "5, 8",
-      opacity: 0.7,
+      dashArray: "5, 10",
+      weight: 3,
     }).addTo(map);
 
-    clientMarkerRef.current = L.marker([lat, lng], { icon: clientIcon })
+    clientMarkerRef.current = L.marker(clientPos, { icon: clientIcon })
       .addTo(map)
       .bindTooltip(name, { sticky: true, className: "leaflet-tooltip-custom" });
 
-    map.flyToBounds(L.latLngBounds([CENTER, [lat, lng]]), {
-      padding: [40, 40],
-      duration: 0.8,
-    });
+    map.fitBounds([BASE_COORDS, clientPos], { padding: [50, 50] });
   }, [clientCoords]);
 
   return (
@@ -142,7 +115,7 @@ export default function MapZoneInner({ clientCoords }: Props) {
         ref={containerRef}
         className="w-full h-64 rounded-xl z-0 overflow-hidden"
         role="img"
-        aria-label="Carte des zones de déplacement Julie Coiff"
+        aria-label="Carte du trajet Julie Coiff"
       />
     </>
   );
