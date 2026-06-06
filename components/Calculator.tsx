@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useTransition } from "react";
+import { useState, useMemo, useRef, useTransition, useEffect } from "react";
 import { z } from "zod";
 import { ChevronLeft, ChevronRight, CheckCircle, Clock, Palette, MapPin } from "lucide-react";
 import {
@@ -54,6 +54,11 @@ type WizardStep = 1 | 2 | 3 | "success";
 
 export default function Calculator() {
   const [wizardStep, setWizardStep]             = useState<WizardStep>(1);
+
+  useEffect(() => {
+    const el = document.getElementById("booking");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [wizardStep]);
   const [selectedBaseId, setSelectedBaseId]     = useState<string | null>(null);
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
   const [distanceKm, setDistanceKm]             = useState<number>(0);
