@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CalendarOff } from "lucide-react";
 
 interface Props {
   counts: { reservations: number; blocks: number };
@@ -42,6 +43,19 @@ export default function AdminTabs({ counts, reservationsTab, agendaTab }: Props)
       </div>
 
       <div>{active === "reservations" ? reservationsTab : agendaTab}</div>
+
+      <button
+        type="button"
+        onClick={() => {
+          setActive("agenda");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+        aria-label="Bloquer un créneau"
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 flex items-center gap-2 bg-primary text-white pl-4 pr-5 py-3.5 rounded-full shadow-lg hover:bg-primary/90 active:scale-95 transition-all"
+      >
+        <CalendarOff className="w-5 h-5" />
+        <span className="text-sm font-medium">Bloquer</span>
+      </button>
     </div>
   );
 }

@@ -2,7 +2,6 @@ import Calculator from "@/components/Calculator";
 import Storytelling from "@/components/Storytelling";
 import PortfolioGallery from "@/components/PortfolioGallery";
 import GoogleReviews from "@/components/GoogleReviews";
-
 export default function HomePage() {
   return (
     <div className="flex flex-col">

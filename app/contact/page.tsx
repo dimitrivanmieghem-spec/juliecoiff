@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { CheckCircle } from "lucide-react";
+import { sendContactEmail } from "@/app/actions/contact";
 
 const inputClass =
   "w-full bg-white/80 border border-primary/20 rounded-xl px-4 py-3 text-sm text-text-main placeholder:text-text-main/40 focus:outline-none focus:ring-2 focus:ring-primary/40 transition";
@@ -24,8 +25,12 @@ export default function ContactPage() {
       return;
     }
     startTransition(async () => {
-      await new Promise((r) => setTimeout(r, 600));
-      setSent(true);
+      const result = await sendContactEmail(fd);
+      if ("error" in result) {
+        setError(result.error);
+      } else {
+        setSent(true);
+      }
     });
   }
 

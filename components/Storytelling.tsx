@@ -6,8 +6,11 @@ export default function Storytelling() {
     <section className="py-16 md:py-24 px-4">
       <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 md:gap-16 items-center">
         <div className="order-2 md:order-1">
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary/60 mb-4">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary/60 mb-2">
             Coiffeuse à domicile · Seneffe &amp; environs
+          </p>
+          <p className="text-xs text-text-main/45 italic mb-5">
+            Diplômée par l&apos;école CEFA Manage
           </p>
           <h2 className="font-serif text-3xl md:text-4xl text-text-main font-semibold leading-tight mb-6">
             L&apos;expertise Julie Coiff<br className="hidden md:block" /> à votre domicile
@@ -30,14 +33,15 @@ export default function Storytelling() {
           </Link>
         </div>
 
-        {/* Replace /photo-julie.jpg with the actual portrait photo in /public */}
-        <div className="order-1 md:order-2 relative h-72 md:h-[420px] rounded-2xl overflow-hidden shadow-lg">
+        <div className="order-1 md:order-2 relative h-72 md:h-[420px] rounded-3xl overflow-hidden shadow-lg">
           <Image
             src="/IMG_5863.JPEG"
             alt="Julie, coiffeuse à domicile"
             fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover rounded-2xl shadow-xl"
+            priority
+            quality={75}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-tr from-primary/15 via-transparent to-transparent" />
         </div>

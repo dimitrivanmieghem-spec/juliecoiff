@@ -11,20 +11,20 @@ const Footer: React.FC = () => {
             <ul className="space-y-3 text-sm text-text-main">
               <li>
                 <a
-                  href="tel:+32000000000"
+                  href="tel:+32484666892"
                   className="flex items-center gap-2 hover:text-primary transition-colors duration-200"
                 >
                   <Phone size={15} aria-hidden="true" />
-                  +32 000 00 00 00
+                  0484/66.68.92
                 </a>
               </li>
               <li>
                 <a
-                  href="mailto:info@juliecoiff.be"
+                  href="mailto:julie.budie@icloud.com"
                   className="flex items-center gap-2 hover:text-primary transition-colors duration-200"
                 >
                   <Mail size={15} aria-hidden="true" />
-                  info@juliecoiff.be
+                  julie.budie@icloud.com
                 </a>
               </li>
               <li className="flex items-center gap-2 text-text-main/70">
