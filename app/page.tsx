@@ -9,12 +9,11 @@ export default function HomePage() {
       {/* Hero */}
       <section className="text-center py-16 md:py-20 px-4 border-b border-primary/8">
         <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-text-main leading-tight max-w-3xl mx-auto">
-          L&apos;expertise d&apos;un salon,{" "}
-          <span className="text-primary">le confort de votre maison.</span>
+          Julie Coiff — Votre Coiffeuse à Domicile{" "}
+          <span className="text-primary">à Seneffe et Environs.</span>
         </h1>
         <p className="mt-5 text-base md:text-lg text-text-main/70 max-w-xl mx-auto leading-relaxed">
-          Coiffeuse à domicile à Seneffe et ses environs. Colorations, coupes, balayages —
-          le salon vient à vous.
+          L&apos;expertise et le confort d&apos;un salon professionnel, directement dans votre salon.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <a

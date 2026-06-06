@@ -11,6 +11,7 @@ import {
   formatDuration,
   haversineKm,
   zoneIdFromKm,
+  getTravelFee,
   type Service,
 } from "@/lib/data";
 import { createReservation } from "@/app/actions/booking";
@@ -86,7 +87,7 @@ export default function Calculator() {
   const addonsEnabled  = selectedBase?.category === "Femme";
   const needsColorInfo = selectedAddonIds.includes("a2") || selectedAddonIds.includes("a4");
 
-  const { subTotal, travelFee, travelOffered, nominalFee, total, totalDuration, zoneLabel } =
+  const { subTotal, travelFee, total, totalDuration, zoneLabel } =
     useMemo(() => {
       const basePrice    = selectedBase?.price    ?? 0;
       const baseDuration = selectedBase?.duration ?? 0;
@@ -95,9 +96,10 @@ export default function Calculator() {
       const addonDur     = addonList.reduce((s, a) => s + a.duration, 0);
       const sub          = basePrice + addonPrice;
       const dur          = baseDuration + addonDur;
-      const travel       = computeTravel(distanceKm, sub);
-      return { subTotal: sub, totalDuration: dur, ...travel, total: sub + travel.travelFee };
-    }, [selectedBase, selectedAddonIds, distanceKm]);
+      const { zoneLabel } = computeTravel(distanceKm, sub);
+      const fee          = fieldPostalCode ? getTravelFee(fieldPostalCode) : 0;
+      return { subTotal: sub, totalDuration: dur, zoneLabel, travelFee: fee, total: sub + fee };
+    }, [selectedBase, selectedAddonIds, distanceKm, fieldPostalCode]);
 
   const canStep1Continue = selectedBaseId !== null && addressConfirmed;
 
@@ -550,8 +552,6 @@ export default function Calculator() {
           selectedAddonIds={selectedAddonIds}
           subTotal={subTotal}
           travelFee={travelFee}
-          travelOffered={travelOffered}
-          nominalFee={nominalFee}
           total={total}
           totalDuration={totalDuration}
         />
@@ -652,15 +652,12 @@ interface SummaryProps {
   selectedAddonIds: string[];
   subTotal: number;
   travelFee: number;
-  travelOffered: boolean;
-  nominalFee: number;
   total: number;
   totalDuration: number;
 }
 
 function BookingSummary({
-  selectedBase, selectedAddonIds, subTotal, travelFee, travelOffered,
-  nominalFee, total, totalDuration,
+  selectedBase, selectedAddonIds, subTotal, travelFee, total, totalDuration,
 }: SummaryProps) {
   const selectedAddons = ADDONS.filter((a) => selectedAddonIds.includes(a.id));
 
@@ -693,14 +690,7 @@ function BookingSummary({
           </div>
           <div className="flex justify-between text-text-main/70">
             <span>Frais de déplacement</span>
-            {travelOffered ? (
-              <span className="flex items-center gap-1.5">
-                <span className="line-through text-text-main/40">{nominalFee}€</span>
-                <span className="text-green-600 font-medium text-xs">Offerts !</span>
-              </span>
-            ) : (
-              <span>{travelFee === 0 ? "Gratuit" : `+${travelFee}€`}</span>
-            )}
+            <span>{travelFee === 0 ? "Inclus (Zone 1)" : `+${travelFee}€`}</span>
           </div>
           <div className="flex justify-between font-semibold text-base text-text-main border-t border-primary/10 pt-3 mt-1">
             <span>Total</span>
