@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { supabase, createActionClient } from "@/lib/supabase";
 import { ALL_SERVICES as SERVICES, formatDuration } from "@/lib/data";
+import { sendBookingEmails } from "@/app/actions/emails";
 
 interface CartData {
   serviceIds: string[];
@@ -60,6 +61,30 @@ export async function createReservation(
   });
 
   if (error) return { error: error.message };
+
+  const [y, m, d] = appointmentDate.split("-").map(Number);
+  const dateStr = new Date(y, m - 1, d).toLocaleDateString("fr-BE", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  });
+
+  try {
+    await sendBookingEmails({
+      clientName,
+      clientEmail,
+      clientPhone,
+      clientAddress,
+      serviceNames: cartData.serviceIds
+        .map((id) => SERVICES.find((s) => s.id === id)?.name ?? id)
+        .join(", "),
+      date:         dateStr,
+      time:         appointmentTime.slice(0, 5),
+      totalPrice:   cartData.totalPrice,
+      duration:     cartData.totalDuration ? formatDuration(cartData.totalDuration) : undefined,
+    });
+  } catch (emailError) {
+    console.error("Erreur lors de l'envoi de l'e-mail, mais réservation sauvegardée :", emailError);
+  }
+
   return { success: true };
 }
 
@@ -136,14 +161,14 @@ async function sendConfirmationEmail(r: Reservation) {
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#faf8f5;font-family:'Georgia',serif;">
   <div style="max-width:520px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.07);">
-    <div style="background:#c9a96e;padding:32px 40px;text-align:center;">
+    <div style="background:#b85d38;padding:32px 40px;text-align:center;">
       <h1 style="margin:0;color:#fff;font-size:24px;font-weight:400;letter-spacing:.5px;">Julie Coiff</h1>
       <p style="margin:8px 0 0;color:rgba(255,255,255,.85);font-size:13px;font-family:sans-serif;">Coiffeuse à domicile</p>
     </div>
     <div style="padding:36px 40px;">
       <p style="font-size:15px;color:#3d2c1e;margin:0 0 24px;">Bonjour <strong>${r.client_name}</strong>,</p>
       <p style="font-size:15px;color:#3d2c1e;margin:0 0 28px;line-height:1.6;">
-        Votre rendez-vous est <strong style="color:#c9a96e;">confirmé</strong>. Julie sera ravie de vous accueillir !
+        Votre rendez-vous est <strong style="color:#b85d38;">confirmé</strong>. Julie sera ravie de vous accueillir !
       </p>
       <div style="background:#faf8f5;border-radius:12px;padding:20px 24px;margin-bottom:28px;">
         <table style="width:100%;border-collapse:collapse;font-family:sans-serif;font-size:13px;color:#3d2c1e;">
@@ -170,7 +195,7 @@ async function sendConfirmationEmail(r: Reservation) {
           </tr>
           <tr>
             <td style="padding:10px 0;color:#8a7565;font-weight:500;">Montant</td>
-            <td style="padding:10px 0;text-align:right;font-size:16px;font-weight:700;color:#c9a96e;">${Number(r.total_price).toFixed(2)} €</td>
+            <td style="padding:10px 0;text-align:right;font-size:16px;font-weight:700;color:#b85d38;">${Number(r.total_price).toFixed(2)} €</td>
           </tr>
         </table>
       </div>
