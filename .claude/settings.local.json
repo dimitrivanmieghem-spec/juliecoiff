@@ -11,7 +11,14 @@
       "Bash(git config *)",
       "Bash(git remote *)",
       "Bash(git branch *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git rm *)",
+      "Bash(git reset *)",
+      "Bash(git commit *)",
+      "Bash(git restore *)",
+      "Bash(git push *)",
+      "Bash(npm list *)",
+      "Bash(npx tsc *)"
     ]
   }
 }
