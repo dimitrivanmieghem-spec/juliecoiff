@@ -54,9 +54,22 @@ export default async function ArticlePage({ params }: Props) {
           {article.title}
         </h1>
 
-        <p className="text-base text-text-main/60 leading-relaxed">
+        <p className="text-base text-text-main/60 leading-relaxed mb-6">
           {article.excerpt}
         </p>
+
+        <div className="flex items-center space-x-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={article.author.avatar}
+            alt={article.author.name}
+            className="w-12 h-12 rounded-full object-cover bg-gray-200 border border-gray-100"
+          />
+          <div>
+            <p className="text-sm font-medium text-text-main">{article.author.name}</p>
+            <p className="text-sm text-gray-500">{article.author.role}</p>
+          </div>
+        </div>
       </header>
 
       <div className="relative aspect-[16/9] overflow-hidden rounded-2xl shadow-md mb-10">
