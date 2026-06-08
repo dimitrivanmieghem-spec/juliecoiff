@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 const navLinks = [
   { href: "/",           label: "Accueil"   },
@@ -8,6 +11,9 @@ const navLinks = [
 ];
 
 const Navbar: React.FC = () => {
+  const pathname = usePathname();
+  if (pathname?.startsWith("/admin")) return null;
+
   return (
     <header className="sticky top-0 z-50 bg-background-cream/90 backdrop-blur-sm border-b border-primary/10">
       <nav
