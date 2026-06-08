@@ -1,9 +1,17 @@
 "use server";
 
-import { createActionClient, createClient } from "@/lib/supabase";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createActionClient } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 
 const BUCKET = "portfolio";
+
+function getReadClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
 
 export async function uploadPortfolioImage(formData: FormData): Promise<{ url?: string; fileName?: string; error?: string }> {
   const supabase = await createActionClient();
@@ -33,7 +41,7 @@ export async function deletePortfolioImage(fileName: string): Promise<{ success?
 }
 
 export async function getPortfolioImages(): Promise<{ url: string; fileName: string }[]> {
-  const supabase = await createClient();
+  const supabase = getReadClient();
   const { data, error } = await supabase.storage.from(BUCKET).list("", {
     sortBy: { column: "created_at", order: "asc" },
   });
@@ -49,7 +57,7 @@ export async function getPortfolioImages(): Promise<{ url: string; fileName: str
 }
 
 export async function getPublicPortfolioImages(): Promise<string[]> {
-  const supabase = await createClient();
+  const supabase = getReadClient();
   const { data, error } = await supabase.storage.from(BUCKET).list("", {
     sortBy: { column: "created_at", order: "asc" },
   });

@@ -11,6 +11,10 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+function withCacheBust(url: string): string {
+  return `${url}?t=${Date.now()}`;
+}
+
 interface PortfolioImage {
   url: string;
   fileName: string;
@@ -32,7 +36,7 @@ export default function PortfolioAdmin() {
     const validFiles = data?.filter((file) => file.name && file.name !== ".emptyFolderPlaceholder") || [];
     const mapped = validFiles.map((file) => ({
       fileName: file.name,
-      url: supabase.storage.from("portfolio").getPublicUrl(file.name).data.publicUrl,
+      url: withCacheBust(supabase.storage.from("portfolio").getPublicUrl(file.name).data.publicUrl),
     }));
     setImages(mapped);
     setIsLoading(false);
@@ -50,7 +54,10 @@ export default function PortfolioAdmin() {
     formData.append("file", file);
     const result = await uploadPortfolioImage(formData);
     if (result.url && result.fileName) {
-      setImages((prev) => [{ url: result.url!, fileName: result.fileName! }, ...prev]);
+      setImages((prev) => [
+        { url: withCacheBust(result.url!), fileName: result.fileName! },
+        ...prev,
+      ]);
     }
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -130,6 +137,7 @@ export default function PortfolioAdmin() {
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
+                unoptimized
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
               <button
