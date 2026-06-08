@@ -82,3 +82,23 @@ export function zoneIdFromKm(km: number): string {
   if (km <= 15) return "zone-2";
   return "zone-3";
 }
+
+export interface Review {
+  id: number;
+  name: string;
+  rating: number;
+  text: string;
+}
+
+export const reviews: Review[] = [
+  { id: 1,  name: "Cathy Vanreckt",    rating: 5, text: "Très contente de ma nouvelle coiffure. J'adore. Merci pour le travail 🌼" },
+  { id: 2,  name: "Hélène Kalnak",     rating: 5, text: "Accueil très sympa. Coiffeuse très à l'écoute, efficace. Une cliente très satisfaite ! Je recommande. Merci Julie" },
+  { id: 3,  name: "marie damoisiaux",  rating: 5, text: "Super coiffeuse.. d une gentillesse incroyable. Soucieuse du bonheur de ses clientes, de bon conseils, on est chouchoutée et très bon travail. Merci" },
+  { id: 4,  name: "Kiera V.",          rating: 5, text: "Super contente du resultat et super coiffeuse. J'adore !! 😍" },
+  { id: 5,  name: "Sabah El Haman",    rating: 5, text: "Expérience incroyable chez Julie. Elle parvient toujours à créer le style parfait que je recherche et l'ambiance est accueillante. Je recommande vivement !" },
+  { id: 6,  name: "Natacha Hubert",    rating: 5, text: "Un superbe moment de détente dans un beau salon, une petite attention ( café et biscuit) qui fait bien plaisir et un résultat coiffure qui me plait bcp" },
+  { id: 7,  name: "Hélène Bouvy",      rating: 5, text: "Super chouette moment ! Une personne aux petits soins et à l'écoute de ses clients 🙂" },
+  { id: 8,  name: "Fabienne Saeys",    rating: 5, text: "Un bon moment de détente et très satisfaite 😌. Merci Julie" },
+  { id: 9,  name: "Caroline Koeks",    rating: 5, text: "Excellente coiffeuse je recommande vivement :-)" },
+  { id: 10, name: "CAROLE KOEKS",      rating: 5, text: "Jeune coiffeuse dynamique, sociable et tres agréable. Je la conseille vivement !" },
+];
