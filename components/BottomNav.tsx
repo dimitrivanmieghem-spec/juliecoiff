@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Images, Calendar, Phone } from "lucide-react";
+import { Home, Images, Calendar, Phone, BookOpen } from "lucide-react";
 
 const navItems = [
   { href: "/",                label: "Accueil",     icon: Home     },
   { href: "/#portfolio",      label: "Galerie",     icon: Images   },
   { href: "/#booking",        label: "Réservation", icon: Calendar },
+  { href: "/blog",            label: "Conseils",    icon: BookOpen },
   { href: "tel:+32484666892", label: "Contact",     icon: Phone    },
 ];
 
