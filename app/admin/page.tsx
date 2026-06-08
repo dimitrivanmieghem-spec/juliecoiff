@@ -2,10 +2,12 @@
 import { createClient } from "@/lib/supabase";
 import { logout } from "@/app/actions/auth";
 import { deleteBlock } from "@/app/actions/admin";
+import { getPortfolioImages } from "@/app/actions/portfolio";
 import StatusButtons from "@/components/StatusButtons";
 import BlockSlotForm from "@/components/BlockSlotForm";
 import AdminTabs from "@/components/AdminTabs";
 import ReservationSubTabs from "@/components/ReservationSubTabs";
+import PortfolioAdmin from "@/components/PortfolioAdmin";
 import { ALL_SERVICES as SERVICES, formatDuration } from "@/lib/data";
 import { MapPin, Clock, Mail, Phone, Scissors } from "lucide-react";
 
@@ -121,7 +123,7 @@ export default async function AdminPage() {
   const supabase = await createClient();
   const today = new Date().toISOString().split("T")[0];
 
-  const [{ data: reservations, error }, { data: blocks }] = await Promise.all([
+  const [{ data: reservations, error }, { data: blocks }, portfolioImages] = await Promise.all([
     supabase.from("reservations").select("*").order("created_at", { ascending: false }),
     supabase
       .from("unavailabilities")
@@ -129,6 +131,7 @@ export default async function AdminPage() {
       .gte("block_date", today)
       .order("block_date")
       .order("block_time"),
+    getPortfolioImages(),
   ]);
 
   const allReservations = (reservations ?? []) as Reservation[];
@@ -217,6 +220,8 @@ export default async function AdminPage() {
     </div>
   );
 
+  const portfolioTab = <PortfolioAdmin images={portfolioImages} />;
+
   return (
     <div className="min-h-screen bg-background-cream pb-24">
       <header className="bg-white/80 backdrop-blur-sm border-b border-primary/10 px-4 py-4 sticky top-0 z-10">
@@ -243,6 +248,7 @@ export default async function AdminPage() {
           counts={{ reservations: reservations?.length ?? 0, blocks: blocks?.length ?? 0 }}
           reservationsTab={reservationsTab}
           agendaTab={agendaTab}
+          portfolioTab={portfolioTab}
         />
       </main>
     </div>
