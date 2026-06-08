@@ -3,7 +3,13 @@
 import { useState, useTransition, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Trash2, Loader2, ImagePlus, Images } from "lucide-react";
-import { uploadPortfolioImage, deletePortfolioImage, getPortfolioImages } from "@/app/actions/portfolio";
+import { createClient } from "@supabase/supabase-js";
+import { uploadPortfolioImage, deletePortfolioImage } from "@/app/actions/portfolio";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface PortfolioImage {
   url: string;
@@ -19,8 +25,15 @@ export default function PortfolioAdmin() {
 
   async function fetchImages() {
     setIsLoading(true);
-    const data = await getPortfolioImages();
-    setImages(data);
+    const { data, error } = await supabase.storage.from("portfolio").list("");
+    if (error) console.error("Erreur Supabase List:", error);
+    console.log("Fichiers trouvés dans le bucket:", data);
+    const validFiles = data?.filter((file) => file.name && file.name !== ".emptyFolderPlaceholder") || [];
+    const mapped = validFiles.map((file) => ({
+      fileName: file.name,
+      url: supabase.storage.from("portfolio").getPublicUrl(file.name).data.publicUrl,
+    }));
+    setImages(mapped);
     setIsLoading(false);
   }
 
