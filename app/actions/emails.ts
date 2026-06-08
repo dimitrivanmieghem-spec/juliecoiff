@@ -139,14 +139,14 @@ export async function sendBookingEmails(data: BookingEmailData): Promise<void> {
   await Promise.all([
     resend.emails.send({
       from: FROM,
-      reply_to: REPLY_TO,
+      replyTo: REPLY_TO,
       to: data.clientEmail,
       subject: "Confirmation de votre rendez-vous — Julie Coiff",
       html: clientHtml,
     }),
     resend.emails.send({
       from: FROM,
-      reply_to: REPLY_TO,
+      replyTo: REPLY_TO,
       to: process.env.ADMIN_EMAIL ?? REPLY_TO,
       subject: `📅 NOUVEAU RENDEZ-VOUS : ${data.clientName}`,
       html: adminHtml,
