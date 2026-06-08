@@ -2,6 +2,7 @@ import Calculator from "@/components/Calculator";
 import Storytelling from "@/components/Storytelling";
 import PortfolioGallery from "@/components/PortfolioGallery";
 import GoogleReviews from "@/components/GoogleReviews";
+import FAQ from "@/components/FAQ";
 export default function HomePage() {
   return (
     <div className="flex flex-col">
@@ -63,6 +64,9 @@ export default function HomePage() {
       <div id="avis">
         <GoogleReviews />
       </div>
+
+      {/* FAQ */}
+      <FAQ />
 
       {/* Final CTA */}
       <section className="py-20 md:py-28 px-4 bg-gradient-to-br from-primary/15 via-[#f5e0d5] to-primary/8 text-center">
