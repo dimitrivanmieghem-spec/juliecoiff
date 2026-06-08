@@ -24,6 +24,7 @@ export default function PortfolioAdmin() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function fetchImages() {
+    if (uploading) return;
     setIsLoading(true);
     const { data, error } = await supabase.storage.from("portfolio").list("");
     if (error) console.error("Erreur Supabase List:", error);
@@ -49,7 +50,7 @@ export default function PortfolioAdmin() {
     formData.append("file", file);
     const result = await uploadPortfolioImage(formData);
     if (result.url && result.fileName) {
-      setImages((prev) => [...prev, { url: result.url!, fileName: result.fileName! }]);
+      setImages((prev) => [{ url: result.url!, fileName: result.fileName! }, ...prev]);
     }
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = "";

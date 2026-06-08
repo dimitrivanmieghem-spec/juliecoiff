@@ -20,7 +20,6 @@ export async function uploadPortfolioImage(formData: FormData): Promise<{ url?: 
   if (error) return { error: error.message };
 
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName);
-  revalidatePath("/admin");
   revalidatePath("/");
   return { url: data.publicUrl, fileName };
 }
@@ -29,7 +28,6 @@ export async function deletePortfolioImage(fileName: string): Promise<{ success?
   const supabase = await createActionClient();
   const { error } = await supabase.storage.from(BUCKET).remove([fileName]);
   if (error) return { error: error.message };
-  revalidatePath("/admin");
   revalidatePath("/");
   return { success: true };
 }

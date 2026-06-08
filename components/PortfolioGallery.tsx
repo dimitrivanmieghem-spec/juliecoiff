@@ -2,7 +2,13 @@ import { getPublicPortfolioImages } from "@/app/actions/portfolio";
 import PortfolioCarousel from "./PortfolioCarousel";
 
 export default async function PortfolioGallery() {
-  const images = await getPublicPortfolioImages();
+  let images: string[] = [];
+  try {
+    images = await getPublicPortfolioImages();
+  } catch (err) {
+    console.error("PortfolioGallery: erreur chargement images", err);
+  }
+
   if (images.length === 0) return null;
 
   return (
