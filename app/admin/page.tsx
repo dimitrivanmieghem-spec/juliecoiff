@@ -2,7 +2,6 @@
 import { createClient } from "@/lib/supabase";
 import { logout } from "@/app/actions/auth";
 import { deleteBlock } from "@/app/actions/admin";
-import { getPortfolioImages } from "@/app/actions/portfolio";
 import StatusButtons from "@/components/StatusButtons";
 import BlockSlotForm from "@/components/BlockSlotForm";
 import AdminTabs from "@/components/AdminTabs";
@@ -123,7 +122,7 @@ export default async function AdminPage() {
   const supabase = await createClient();
   const today = new Date().toISOString().split("T")[0];
 
-  const [{ data: reservations, error }, { data: blocks }, portfolioImages] = await Promise.all([
+  const [{ data: reservations, error }, { data: blocks }] = await Promise.all([
     supabase.from("reservations").select("*").order("created_at", { ascending: false }),
     supabase
       .from("unavailabilities")
@@ -131,7 +130,6 @@ export default async function AdminPage() {
       .gte("block_date", today)
       .order("block_date")
       .order("block_time"),
-    getPortfolioImages(),
   ]);
 
   const allReservations = (reservations ?? []) as Reservation[];
@@ -220,7 +218,7 @@ export default async function AdminPage() {
     </div>
   );
 
-  const portfolioTab = <PortfolioAdmin images={portfolioImages} />;
+  const portfolioTab = <PortfolioAdmin />;
 
   return (
     <div className="min-h-screen bg-background-cream pb-24">

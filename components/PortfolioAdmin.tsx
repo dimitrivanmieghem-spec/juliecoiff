@@ -1,20 +1,32 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Trash2, Loader2, ImagePlus, Images } from "lucide-react";
-import { uploadPortfolioImage, deletePortfolioImage } from "@/app/actions/portfolio";
+import { uploadPortfolioImage, deletePortfolioImage, getPortfolioImages } from "@/app/actions/portfolio";
 
 interface PortfolioImage {
   url: string;
   fileName: string;
 }
 
-export default function PortfolioAdmin({ images: initialImages }: { images: PortfolioImage[] }) {
-  const [images, setImages] = useState<PortfolioImage[]>(initialImages);
+export default function PortfolioAdmin() {
+  const [images, setImages] = useState<PortfolioImage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function fetchImages() {
+    setIsLoading(true);
+    const data = await getPortfolioImages();
+    setImages(data);
+    setIsLoading(false);
+  }
+
+  useEffect(() => {
+    fetchImages();
+  }, []);
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -83,7 +95,12 @@ export default function PortfolioAdmin({ images: initialImages }: { images: Port
         </div>
       </div>
 
-      {images.length === 0 ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20 text-text-main/40 gap-2">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-sm">Chargement des photos…</span>
+        </div>
+      ) : images.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-text-main/40 border-2 border-dashed border-primary/20 rounded-2xl">
           <Images className="w-10 h-10 mb-3 opacity-40" />
           <p className="text-sm">Aucune photo dans le portfolio.</p>
