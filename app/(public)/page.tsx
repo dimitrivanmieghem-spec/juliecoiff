@@ -1,8 +1,31 @@
+import type { Metadata } from "next";
 import Calculator from "@/components/Calculator";
 import Storytelling from "@/components/Storytelling";
 import PortfolioGallery from "@/components/PortfolioGallery";
 import GoogleReviews from "@/components/GoogleReviews";
 import FAQ from "@/components/FAQ";
+
+export const metadata: Metadata = {
+  title: "Julie Coiff | Coiffure à domicile à Seneffe & environs",
+  description:
+    "Julie Coiff : votre experte coiffure à domicile à Seneffe, Manage, Nivelles et environs. Coloration, balayage sur-mesure et soins professionnels chez vous.",
+  openGraph: {
+    title: "Julie Coiff | Coiffure à domicile à Seneffe & environs",
+    description:
+      "Découvrez l'expertise coiffure de Julie Coiff, directement chez vous. Balayages, colorations et soins haut de gamme.",
+    url: "https://www.juliecoiff.be",
+    siteName: "Julie Coiff",
+    type: "website",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "Julie Coiff - Coiffure à domicile",
+      },
+    ],
+  },
+};
 export default function HomePage() {
   return (
     <div className="flex flex-col">
