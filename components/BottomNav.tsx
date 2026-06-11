@@ -9,7 +9,7 @@ const navItems = [
   { href: "/#portfolio",      label: "Galerie",     icon: Images   },
   { href: "/#booking",        label: "Réservation", icon: Calendar },
   { href: "/blog",            label: "Conseils",    icon: BookOpen },
-  { href: "tel:+32484666892", label: "Contact",     icon: Phone    },
+  { href: "/contact",          label: "Contact",     icon: Phone    },
 ];
 
 export default function BottomNav() {
@@ -18,7 +18,7 @@ export default function BottomNav() {
   if (pathname?.startsWith("/admin")) return null;
 
   function isActive(href: string) {
-    if (href.startsWith("tel:") || href.includes("#")) return false;
+    if (href.includes("#")) return false;
     return pathname === href;
   }
 
