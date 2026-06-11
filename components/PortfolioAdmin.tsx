@@ -48,33 +48,67 @@ export default function PortfolioAdmin() {
     fetchImages();
   }, []);
 
+  async function processImage(originalFile: File): Promise<File | null> {
+    try {
+      const isHeic = originalFile.type === "image/heic" || originalFile.name.toLowerCase().endsWith(".heic");
+      const isStandardImage = originalFile.type.startsWith("image/");
+
+      if (!isStandardImage && !isHeic) {
+        throw new Error("Le fichier sélectionné n'est pas une image valide.");
+      }
+
+      let processableFile = originalFile;
+
+      if (isHeic) {
+        try {
+          const convertedBlob = await heic2any({ blob: originalFile, toType: "image/jpeg" });
+          const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+          processableFile = new File([blob], originalFile.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : "";
+          if (msg.includes("already browser readable")) {
+            processableFile = originalFile;
+          } else {
+            console.error("Échec de la conversion HEIC :", err);
+            throw new Error("Impossible de lire cette photo iPhone. Veuillez essayer un autre fichier.");
+          }
+        }
+      }
+
+      if (!processableFile.type.startsWith("image/")) {
+        throw new Error("Format d'image non reconnu avant la compression.");
+      }
+
+      const compressedBlob = await imageCompression(processableFile, {
+        maxSizeMB: 0.4,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+        fileType: "image/webp",
+      });
+
+      return new File(
+        [compressedBlob],
+        processableFile.name.replace(/\.(heic|jpg|jpeg|png)$/i, ".webp"),
+        { type: "image/webp" }
+      );
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Une erreur inattendue s'est produite lors du traitement de l'image.";
+      alert(msg);
+      return null;
+    }
+  }
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    let fileToUpload: File = file;
 
-    if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
-      try {
-        const convertedBlob = await heic2any({ blob: file, toType: "image/jpeg" });
-        const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-        fileToUpload = new File([blob], file.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
-      } catch (err) {
-        console.warn("Conversion HEIC ignorée (fichier déjà lisible ou erreur) :", err);
-      }
+    const finalFile = await processImage(file);
+    if (!finalFile) {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
     }
-
-    const compressedBlob = await imageCompression(fileToUpload, {
-      maxSizeMB: 0.4,
-      maxWidthOrHeight: 1920,
-      useWebWorker: true,
-      fileType: "image/webp",
-    });
-    const finalFile = new File(
-      [compressedBlob],
-      fileToUpload.name.replace(/\.(jpg|jpeg|png|heic)$/i, ".webp"),
-      { type: "image/webp" }
-    );
 
     const formData = new FormData();
     formData.append("file", finalFile);
