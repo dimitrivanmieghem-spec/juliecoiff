@@ -60,6 +60,7 @@ export default function Calculator() {
   const [fieldPostalCode, setFieldPostalCode] = useState("");
   const [fieldColorBase, setFieldColorBase]   = useState("");
   const [fieldColorNotes, setFieldColorNotes] = useState("");
+  const [isRgpdAccepted, setIsRgpdAccepted]   = useState(false);
 
   const [serverError, setServerError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -90,7 +91,8 @@ export default function Calculator() {
     fieldFirstName.trim().length > 0 &&
     fieldLastName.trim().length > 0 &&
     fieldEmail.trim().length > 0 &&
-    fieldPhone.trim().length > 0;
+    fieldPhone.trim().length > 0 &&
+    isRgpdAccepted;
 
   const canAdvance =
     wizardStep === 1 ? selectedBaseId !== null :
@@ -108,7 +110,7 @@ export default function Calculator() {
     : wizardStep === 3 && !selectedDateTime
       ? "Veuillez sélectionner un créneau pour continuer."
     : wizardStep === 4 && !canStep4Submit
-      ? "Veuillez compléter tous les champs obligatoires."
+      ? (!isRgpdAccepted ? "Veuillez accepter la politique de confidentialité pour continuer." : "Veuillez compléter tous les champs obligatoires.")
     : null;
 
   function toggleAddon(id: string) {
@@ -146,7 +148,7 @@ export default function Calculator() {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!canStep4Submit || !selectedDateTime) return;
+    if (!canStep4Submit || !isRgpdAccepted || !selectedDateTime) return;
     setServerError(null);
     setFieldErrors({});
 
@@ -191,6 +193,7 @@ export default function Calculator() {
     setSelectedDateTime(null);
     setAddressConfirmed(false);
     setFieldFirstName(""); setFieldLastName(""); setFieldEmail(""); setFieldPhone("");
+    setIsRgpdAccepted(false);
     setFieldStreet(""); setFieldPostalCode(""); setFieldColorBase(""); setFieldColorNotes("");
     setFieldErrors({});
   }
@@ -545,6 +548,27 @@ export default function Calculator() {
                   {serverError}
                 </p>
               )}
+
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isRgpdAccepted}
+                  onChange={(e) => setIsRgpdAccepted(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 shrink-0 rounded border-primary/30 text-primary accent-primary cursor-pointer"
+                />
+                <span className="text-xs text-text-main/60 leading-relaxed">
+                  J&apos;accepte que mes données soient traitées pour la gestion de mon rendez-vous, conformément à la{" "}
+                  <a
+                    href="/mentions-legales"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary underline underline-offset-2 hover:text-primary-light transition-colors"
+                  >
+                    politique de confidentialité
+                  </a>
+                  .
+                </span>
+              </label>
 
               <div className="hidden md:block">
                 {!canStep4Submit && helpText && (
