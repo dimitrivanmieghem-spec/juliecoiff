@@ -55,9 +55,13 @@ export default function PortfolioAdmin() {
     let fileToUpload: File = file;
 
     if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
-      const convertedBlob = await heic2any({ blob: file, toType: "image/jpeg" });
-      const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-      fileToUpload = new File([blob], file.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
+      try {
+        const convertedBlob = await heic2any({ blob: file, toType: "image/jpeg" });
+        const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        fileToUpload = new File([blob], file.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
+      } catch (err) {
+        console.warn("Conversion HEIC ignorée (fichier déjà lisible ou erreur) :", err);
+      }
     }
 
     const compressedBlob = await imageCompression(fileToUpload, {
