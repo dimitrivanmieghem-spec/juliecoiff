@@ -4,6 +4,7 @@ import { useState, useTransition, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Trash2, Loader2, ImagePlus, Images } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
+import imageCompression from "browser-image-compression";
 import { uploadPortfolioImage, deletePortfolioImage } from "@/app/actions/portfolio";
 
 const supabase = createClient(
@@ -50,8 +51,14 @@ export default function PortfolioAdmin() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    const compressedFile = await imageCompression(file, {
+      maxSizeMB: 0.5,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+      fileType: "image/webp",
+    });
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", compressedFile);
     const result = await uploadPortfolioImage(formData);
     if (result.url && result.fileName) {
       setImages((prev) => [
