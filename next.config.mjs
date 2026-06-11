@@ -25,7 +25,6 @@ const nextConfig = {
       { source: "/politique-de-confidentialite",  destination: "/mentions-legales", permanent: true },
       { source: "/politique-de-confidentialité",  destination: "/mentions-legales", permanent: true },
       { source: "/service-page/:path*",           destination: "/services",         permanent: true },
-      { source: "/blog/:path*",                   destination: "/blog/:path*",      permanent: true },
     ];
   },
   async headers() {
