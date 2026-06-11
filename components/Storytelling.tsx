@@ -13,7 +13,7 @@ export default function Storytelling() {
             Diplômée par l&apos;école CEFA Manage
           </p>
           <h2 className="font-serif text-3xl md:text-4xl text-text-main font-semibold leading-tight mb-6">
-            L&apos;expertise Julie Coiff<br className="hidden md:block" /> à votre domicile
+            Coiffeuse experte à Manage &amp; Nivelles<br className="hidden md:block" /> — L&apos;excellence à domicile
           </h2>
           <p className="text-base text-text-main/70 leading-relaxed mb-4">
             Forte de mon expérience en salon, j&apos;ai décidé de mettre mon savoir-faire

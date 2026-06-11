@@ -37,7 +37,7 @@ const Footer: React.FC = () => {
           <div>
             <h2 className="font-serif text-primary font-semibold text-lg mb-4">Zone d&apos;intervention</h2>
             <ul className="text-sm text-text-main/80 space-y-1.5 columns-2" role="list">
-              {["Seneffe", "Feluy", "Familleureux", "Arquennes", "Manage", "Nivelles", "Pont-à-Celles", "Ecaussinnes"].map((city) => (
+              {["Seneffe", "Feluy", "Familleureux", "Arquennes", "Manage", "Nivelles", "La Louvière", "Pont-à-Celles", "Ecaussinnes"].map((city) => (
                 <li key={city}>{city}</li>
               ))}
             </ul>

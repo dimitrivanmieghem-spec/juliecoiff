@@ -1,6 +1,8 @@
 "use server";
 
+import { headers } from "next/headers";
 import { z } from "zod";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 const contactSchema = z.object({
   name:    z.string().min(2, "Nom trop court"),
@@ -20,6 +22,11 @@ function escapeHtml(str: string): string {
 export async function sendContactEmail(
   formData: FormData
 ): Promise<{ success: true } | { error: string }> {
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for")?.split(",")[0].trim() ?? "anonymous";
+  const { limited } = await checkRateLimit(`contact:${ip}`);
+  if (limited) return { error: "Trop de tentatives. Veuillez patienter une minute avant de réessayer." };
+
   const raw = {
     name:    formData.get("name")?.toString().trim() ?? "",
     email:   formData.get("email")?.toString().trim() ?? "",

@@ -1,7 +1,9 @@
 "use server";
 
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { supabase, createActionClient } from "@/lib/supabase";
+import { checkRateLimit } from "@/lib/ratelimit";
 import { ALL_SERVICES as SERVICES, formatDuration } from "@/lib/data";
 import { sendPendingEmails, sendConfirmationEmail, sendRejectionEmail, type BookingEmailData } from "@/app/actions/emails";
 
@@ -46,6 +48,11 @@ export async function createReservation(
   formData: FormData,
   cartData: CartData
 ): Promise<{ success: true } | { error: string }> {
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for")?.split(",")[0].trim() ?? "anonymous";
+  const { limited } = await checkRateLimit(`booking:${ip}`);
+  if (limited) return { error: "Trop de tentatives. Veuillez patienter une minute avant de réessayer." };
+
   const clientName      = formData.get("client_name")?.toString().trim();
   const clientEmail     = formData.get("client_email")?.toString().trim();
   const clientPhone     = formData.get("client_phone")?.toString().trim();

@@ -12,7 +12,12 @@ export async function login(
   const password = formData.get("password")?.toString();
 
   if (!email || !password) {
-    return { error: "Email et mot de passe requis." };
+    return { error: "Identifiants invalides." };
+  }
+
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail || email !== adminEmail) {
+    return { error: "Identifiants invalides." };
   }
 
   const supabase = await createActionClient();
