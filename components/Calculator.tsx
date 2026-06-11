@@ -36,7 +36,7 @@ type FieldErrors = Partial<Record<keyof z.infer<typeof bookingSchema>, string>>;
 
 const addonCategories = Array.from(new Set(ADDONS.map((a) => a.category)));
 
-type WizardStep = 1 | 2 | 3 | "success";
+type WizardStep = 1 | 2 | 3 | 4 | "success";
 
 export default function Calculator() {
   const [wizardStep, setWizardStep]             = useState<WizardStep>(1);
@@ -45,20 +45,21 @@ export default function Calculator() {
     const el = document.getElementById("booking");
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [wizardStep]);
+
   const [selectedBaseId, setSelectedBaseId]     = useState<string | null>(null);
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
   const [clientCoords, setClientCoords]         = useState<ClientCoords | null>(null);
   const [selectedDateTime, setSelectedDateTime] = useState<{ date: string; time: string } | null>(null);
-
   const [addressConfirmed, setAddressConfirmed] = useState(false);
 
-  const [fieldName, setFieldName]               = useState("");
-  const [fieldEmail, setFieldEmail]             = useState("");
-  const [fieldPhone, setFieldPhone]             = useState("");
-  const [fieldStreet, setFieldStreet]           = useState("");
-  const [fieldPostalCode, setFieldPostalCode]   = useState("");
-  const [fieldColorBase, setFieldColorBase]     = useState("");
-  const [fieldColorNotes, setFieldColorNotes]   = useState("");
+  const [fieldFirstName, setFieldFirstName]   = useState("");
+  const [fieldLastName, setFieldLastName]     = useState("");
+  const [fieldEmail, setFieldEmail]           = useState("");
+  const [fieldPhone, setFieldPhone]           = useState("");
+  const [fieldStreet, setFieldStreet]         = useState("");
+  const [fieldPostalCode, setFieldPostalCode] = useState("");
+  const [fieldColorBase, setFieldColorBase]   = useState("");
+  const [fieldColorNotes, setFieldColorNotes] = useState("");
 
   const [serverError, setServerError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -70,30 +71,45 @@ export default function Calculator() {
   const addonsEnabled  = selectedBase?.category === "Femme";
   const needsColorInfo = selectedAddonIds.includes("a2") || selectedAddonIds.includes("a4");
 
-  const postalFee        = fieldPostalCode ? getTravelFee(fieldPostalCode) : null;
+  const postalFee         = fieldPostalCode ? getTravelFee(fieldPostalCode) : null;
   const zoneOutOfCoverage = addressConfirmed && postalFee === null;
 
-  const { subTotal, travelFee, total, totalDuration } =
-    useMemo(() => {
-      const basePrice    = selectedBase?.price    ?? 0;
-      const baseDuration = selectedBase?.duration ?? 0;
-      const addonList    = ADDONS.filter((a) => selectedAddonIds.includes(a.id));
-      const addonPrice   = addonList.reduce((s, a) => s + a.price,    0);
-      const addonDur     = addonList.reduce((s, a) => s + a.duration, 0);
-      const sub          = basePrice + addonPrice;
-      const dur          = baseDuration + addonDur;
-      const fee          = fieldPostalCode ? (getTravelFee(fieldPostalCode) ?? 0) : 0;
-      return { subTotal: sub, totalDuration: dur, travelFee: fee, total: sub + fee };
-    }, [selectedBase, selectedAddonIds, fieldPostalCode]);
+  const { subTotal, travelFee, total, totalDuration } = useMemo(() => {
+    const basePrice    = selectedBase?.price    ?? 0;
+    const baseDuration = selectedBase?.duration ?? 0;
+    const addonList    = ADDONS.filter((a) => selectedAddonIds.includes(a.id));
+    const addonPrice   = addonList.reduce((s, a) => s + a.price,    0);
+    const addonDur     = addonList.reduce((s, a) => s + a.duration, 0);
+    const sub          = basePrice + addonPrice;
+    const dur          = baseDuration + addonDur;
+    const fee          = fieldPostalCode ? (getTravelFee(fieldPostalCode) ?? 0) : 0;
+    return { subTotal: sub, totalDuration: dur, travelFee: fee, total: sub + fee };
+  }, [selectedBase, selectedAddonIds, fieldPostalCode]);
 
-  const canStep1Continue = selectedBaseId !== null && addressConfirmed && !zoneOutOfCoverage;
-
-  const isFormValid =
-    fieldName.trim().length > 0 &&
+  const canStep4Submit =
+    fieldFirstName.trim().length > 0 &&
+    fieldLastName.trim().length > 0 &&
     fieldEmail.trim().length > 0 &&
-    fieldPhone.trim().length > 0 &&
-    fieldStreet.trim().length > 0 &&
-    selectedDateTime !== null;
+    fieldPhone.trim().length > 0;
+
+  const canAdvance =
+    wizardStep === 1 ? selectedBaseId !== null :
+    wizardStep === 2 ? addressConfirmed && !zoneOutOfCoverage :
+    wizardStep === 3 ? selectedDateTime !== null :
+    wizardStep === 4 ? canStep4Submit : false;
+
+  const helpText =
+    wizardStep === 1 && !selectedBaseId
+      ? "Veuillez sélectionner une prestation pour continuer."
+    : wizardStep === 2 && zoneOutOfCoverage
+      ? "Zone non couverte — impossible de continuer."
+    : wizardStep === 2 && !addressConfirmed
+      ? "Saisissez et confirmez votre adresse pour continuer."
+    : wizardStep === 3 && !selectedDateTime
+      ? "Veuillez sélectionner un créneau pour continuer."
+    : wizardStep === 4 && !canStep4Submit
+      ? "Veuillez compléter tous les champs obligatoires."
+    : null;
 
   function toggleAddon(id: string) {
     setSelectedAddonIds((prev) =>
@@ -116,24 +132,27 @@ export default function Calculator() {
   }
 
   function advanceStep() {
-    if (wizardStep === 1) setWizardStep(addonsEnabled ? 2 : 3);
+    if (wizardStep === 1) setWizardStep(2);
     else if (wizardStep === 2) setWizardStep(3);
-    else if (wizardStep === 3) formRef.current?.requestSubmit();
+    else if (wizardStep === 3) setWizardStep(4);
+    else if (wizardStep === 4) formRef.current?.requestSubmit();
   }
 
   function goBack() {
     if (wizardStep === 2) setWizardStep(1);
-    else if (wizardStep === 3) setWizardStep(addonsEnabled ? 2 : 1);
+    else if (wizardStep === 3) setWizardStep(2);
+    else if (wizardStep === 4) setWizardStep(3);
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!isFormValid || !selectedDateTime) return;
+    if (!canStep4Submit || !selectedDateTime) return;
     setServerError(null);
     setFieldErrors({});
 
+    const fullName = `${fieldFirstName.trim()} ${fieldLastName.trim()}`;
     const parsed = bookingSchema.safeParse({
-      fullName: fieldName, email: fieldEmail, phone: fieldPhone, address: fieldStreet,
+      fullName, email: fieldEmail, phone: fieldPhone, address: fieldStreet,
     });
 
     if (!parsed.success) {
@@ -147,6 +166,7 @@ export default function Calculator() {
     }
 
     const formData = new FormData(e.currentTarget);
+    formData.set("client_name", fullName);
     formData.set("appointment_date", selectedDateTime.date);
     formData.set("appointment_time", selectedDateTime.time);
 
@@ -170,12 +190,11 @@ export default function Calculator() {
     setClientCoords(null);
     setSelectedDateTime(null);
     setAddressConfirmed(false);
-    setFieldName(""); setFieldEmail(""); setFieldPhone(""); setFieldStreet(""); setFieldPostalCode("");
-    setFieldColorBase(""); setFieldColorNotes("");
+    setFieldFirstName(""); setFieldLastName(""); setFieldEmail(""); setFieldPhone("");
+    setFieldStreet(""); setFieldPostalCode(""); setFieldColorBase(""); setFieldColorNotes("");
     setFieldErrors({});
   }
 
-  // ── SUCCESS ──────────────────────────────────────────────────────────────
   if (wizardStep === "success") {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center gap-5 pb-20 md:pb-0">
@@ -196,14 +215,15 @@ export default function Calculator() {
     );
   }
 
-  const numericStep   = wizardStep as 1 | 2 | 3;
-  const visibleLabels = addonsEnabled ? ["Prestation", "Options", "Rendez-vous"] : ["Prestation", "Rendez-vous"];
-  const visibleIndex  = numericStep === 1 ? 0 : numericStep === 2 ? 1 : addonsEnabled ? 2 : 1;
-  const canAdvance    = numericStep === 1 ? canStep1Continue : numericStep === 2 ? true : isFormValid;
+  const numericStep = wizardStep as 1 | 2 | 3 | 4;
+  const stepLabels  = ["Prestation", "Lieu", "Date", "Coordonnées"];
+  const btnLabel    = numericStep === 4
+    ? (isPending ? "Envoi en cours…" : "Confirmer ma réservation")
+    : "Continuer";
 
   return (
     <div className="pb-44 md:pb-0">
-      <ProgressBar labels={visibleLabels} currentIndex={visibleIndex} />
+      <ProgressBar labels={stepLabels} currentIndex={numericStep - 1} />
 
       <div className="mt-8 flex flex-col lg:flex-row gap-8 items-start">
         <div className="w-full lg:flex-1">
@@ -219,7 +239,7 @@ export default function Calculator() {
             </button>
           )}
 
-          {/* ── STEP 1 : Prestation + Ville ──────────────────────────────── */}
+          {/* ── STEP 1 : Prestations (+ options Femme) ─────────────────────── */}
           {numericStep === 1 && (
             <div className="space-y-10">
               <section aria-labelledby="base-label">
@@ -266,6 +286,62 @@ export default function Calculator() {
                 ))}
               </section>
 
+              {addonsEnabled && (
+                <section aria-labelledby="addon-label">
+                  <h2 id="addon-label" className="font-serif text-primary text-xl font-semibold mb-1 pb-2 border-b border-primary/20">
+                    Techniques et soins
+                    <span className="ml-2 text-sm font-sans font-normal text-text-main/50">(Optionnel)</span>
+                  </h2>
+                  <p className="text-xs text-text-main/50 mt-1 mb-6">Ajoutez des options à votre prestation de base.</p>
+
+                  {addonCategories.map((cat) => (
+                    <div key={cat} className="mb-6">
+                      <p className="text-xs font-bold text-text-main/40 uppercase tracking-widest mb-3">{cat}</p>
+                      <ul className="grid grid-cols-2 gap-3" role="list">
+                        {ADDONS.filter((a) => a.category === cat).map((addon) => {
+                          const checked = selectedAddonIds.includes(addon.id);
+                          return (
+                            <li key={addon.id} className="flex">
+                              <label
+                                htmlFor={`addon-${addon.id}`}
+                                className={`w-full flex flex-col items-center justify-between gap-2 p-4 rounded-3xl cursor-pointer border-2 text-center transition-all duration-150 min-h-[96px] ${
+                                  checked
+                                    ? "border-primary bg-primary/8 shadow-md"
+                                    : "border-primary/10 bg-white/70 hover:border-primary/25 hover:bg-white hover:shadow-sm"
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  id={`addon-${addon.id}`}
+                                  checked={checked}
+                                  onChange={() => toggleAddon(addon.id)}
+                                  className="sr-only"
+                                />
+                                <span className="text-sm font-semibold text-text-main leading-snug">{addon.name}</span>
+                                <span className="text-[11px] text-text-main/45 flex items-center gap-1">
+                                  <Clock size={10} aria-hidden="true" />
+                                  {formatDuration(addon.duration)}
+                                </span>
+                                <span className={`text-xl font-bold transition-colors ${checked ? "text-primary" : "text-text-main/70"}`}>
+                                  +{addon.price}€
+                                </span>
+                              </label>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  ))}
+                </section>
+              )}
+
+              <StepCTA label={btnLabel} canAdvance={canAdvance} helpText={helpText} onAdvance={advanceStep} />
+            </div>
+          )}
+
+          {/* ── STEP 2 : Lieu ───────────────────────────────────────────────── */}
+          {numericStep === 2 && (
+            <div className="space-y-8">
               <section aria-labelledby="zone-label">
                 <h2 id="zone-label" className="font-serif text-primary text-xl font-semibold mb-4 pb-2 border-b border-primary/20">
                   Votre adresse
@@ -293,99 +369,17 @@ export default function Calculator() {
                 </div>
               </section>
 
-              <div className="hidden md:block">
-                <button
-                  onClick={advanceStep}
-                  disabled={!canStep1Continue}
-                  className="w-full bg-primary hover:bg-primary-light disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium text-sm px-6 py-3.5 rounded-full transition-colors duration-200"
-                >
-                  Continuer
-                </button>
-                {!canStep1Continue && (
-                  <p className="mt-2 text-xs text-text-main/40 text-center">
-                    {!selectedBase
-                      ? "Choisissez une prestation."
-                      : zoneOutOfCoverage
-                      ? "Zone non couverte — impossible de continuer."
-                      : "Sélectionnez votre adresse dans la liste pour continuer."}
-                  </p>
-                )}
-              </div>
+              <StepCTA label={btnLabel} canAdvance={canAdvance} helpText={helpText} onAdvance={advanceStep} />
             </div>
           )}
 
-          {/* ── STEP 2 : Techniques & Soins ──────────────────────────────── */}
-          {numericStep === 2 && (
-            <section aria-labelledby="addon-label">
-              <h2 id="addon-label" className="font-serif text-primary text-xl font-semibold mb-1 pb-2 border-b border-primary/20">
-                Techniques et soins
-                <span className="ml-2 text-sm font-sans font-normal text-text-main/50">(Optionnel)</span>
-              </h2>
-              <p className="text-xs text-text-main/50 mt-1 mb-6">Ajoutez des options à votre prestation de base.</p>
-
-              {addonCategories.map((cat) => (
-                <div key={cat} className="mb-6">
-                  <p className="text-xs font-bold text-text-main/40 uppercase tracking-widest mb-3">{cat}</p>
-                  <ul className="grid grid-cols-2 gap-3" role="list">
-                    {ADDONS.filter((a) => a.category === cat).map((addon) => {
-                      const checked = selectedAddonIds.includes(addon.id);
-                      return (
-                        <li key={addon.id} className="flex">
-                          <label
-                            htmlFor={`addon-${addon.id}`}
-                            className={`w-full flex flex-col items-center justify-between gap-2 p-4 rounded-3xl cursor-pointer border-2 text-center transition-all duration-150 min-h-[96px] ${
-                              checked
-                                ? "border-primary bg-primary/8 shadow-md"
-                                : "border-primary/10 bg-white/70 hover:border-primary/25 hover:bg-white hover:shadow-sm"
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              id={`addon-${addon.id}`}
-                              checked={checked}
-                              onChange={() => toggleAddon(addon.id)}
-                              className="sr-only"
-                            />
-                            <span className="text-sm font-semibold text-text-main leading-snug">{addon.name}</span>
-                            <span className="text-[11px] text-text-main/45 flex items-center gap-1">
-                              <Clock size={10} aria-hidden="true" />
-                              {formatDuration(addon.duration)}
-                            </span>
-                            <span className={`text-xl font-bold transition-colors ${checked ? "text-primary" : "text-text-main/70"}`}>
-                              +{addon.price}€
-                            </span>
-                          </label>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
-
-              <div className="hidden md:block mt-4">
-                <button
-                  onClick={advanceStep}
-                  className="w-full bg-primary hover:bg-primary-light text-white font-medium text-sm px-6 py-3.5 rounded-full transition-colors duration-200"
-                >
-                  Continuer
-                </button>
-              </div>
-            </section>
-          )}
-
-          {/* ── STEP 3 : Date/Heure + Coordonnées ────────────────────────── */}
+          {/* ── STEP 3 : Date & Heure ───────────────────────────────────────── */}
           {numericStep === 3 && (
-            <form
-              ref={formRef}
-              onSubmit={handleSubmit}
-              aria-label="Formulaire de réservation"
-              noValidate
-              className="space-y-8"
-            >
-              <fieldset>
-                <legend className="font-serif text-primary text-xl font-semibold mb-5 pb-2 border-b border-primary/20 w-full">
+            <div className="space-y-8">
+              <section aria-labelledby="datetime-label">
+                <h2 id="datetime-label" className="font-serif text-primary text-xl font-semibold mb-5 pb-2 border-b border-primary/20">
                   Date &amp; heure souhaitées
-                </legend>
+                </h2>
                 <BookingCalendar
                   totalDuration={totalDuration}
                   onSelectDateTime={(date, time) => setSelectedDateTime({ date, time })}
@@ -395,27 +389,55 @@ export default function Calculator() {
                     ✓ Créneau sélectionné : {selectedDateTime.date} à {selectedDateTime.time}
                   </p>
                 )}
-              </fieldset>
+              </section>
 
+              <StepCTA label={btnLabel} canAdvance={canAdvance} helpText={helpText} onAdvance={advanceStep} />
+            </div>
+          )}
+
+          {/* ── STEP 4 : Coordonnées ────────────────────────────────────────── */}
+          {numericStep === 4 && (
+            <form
+              ref={formRef}
+              onSubmit={handleSubmit}
+              aria-label="Formulaire de réservation"
+              noValidate
+              className="space-y-8"
+            >
               <fieldset className="space-y-4">
                 <legend className="font-serif text-primary text-xl font-semibold mb-5 pb-2 border-b border-primary/20 w-full">
                   Vos coordonnées
                 </legend>
 
-                <div>
-                  <label htmlFor="client_name" className="block text-xs font-medium text-text-main/60 mb-1.5">
-                    Nom complet <span aria-hidden="true">*</span>
-                  </label>
-                  <input
-                    id="client_name" name="client_name" type="text" required
-                    autoComplete="name" placeholder="Marie Dupont"
-                    value={fieldName}
-                    onChange={(e) => { setFieldName(e.target.value); setFieldErrors((p) => ({ ...p, fullName: undefined })); }}
-                    className={`${inputClass} ${fieldErrors.fullName ? "border-red-400 focus:ring-red-300" : ""}`}
-                    aria-describedby={fieldErrors.fullName ? "err-name" : undefined}
-                  />
-                  {fieldErrors.fullName && <p id="err-name" className="mt-1 text-xs text-red-500 px-1">{fieldErrors.fullName}</p>}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="client_firstname" className="block text-xs font-medium text-text-main/60 mb-1.5">
+                      Prénom <span aria-hidden="true">*</span>
+                    </label>
+                    <input
+                      id="client_firstname" name="client_firstname" type="text" required
+                      autoComplete="given-name" placeholder="Marie"
+                      value={fieldFirstName}
+                      onChange={(e) => setFieldFirstName(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="client_lastname" className="block text-xs font-medium text-text-main/60 mb-1.5">
+                      Nom <span aria-hidden="true">*</span>
+                    </label>
+                    <input
+                      id="client_lastname" name="client_lastname" type="text" required
+                      autoComplete="family-name" placeholder="Dupont"
+                      value={fieldLastName}
+                      onChange={(e) => setFieldLastName(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
                 </div>
+                {fieldErrors.fullName && (
+                  <p className="text-xs text-red-500 px-1">{fieldErrors.fullName}</p>
+                )}
 
                 <div>
                   <label htmlFor="client_email" className="block text-xs font-medium text-text-main/60 mb-1.5">
@@ -449,7 +471,7 @@ export default function Calculator() {
 
                 <div>
                   <label className="block text-xs font-medium text-text-main/60 mb-1.5">
-                    Adresse <span aria-hidden="true">*</span>
+                    Adresse confirmée
                   </label>
                   <div className="flex items-center gap-2.5 bg-primary/5 border border-primary/20 rounded-2xl px-4 py-3.5 text-sm text-text-main">
                     <MapPin size={14} className="text-primary shrink-0" aria-hidden="true" />
@@ -458,7 +480,6 @@ export default function Calculator() {
                   <input type="hidden" name="client_street" value={`${fieldStreet}, ${fieldPostalCode} ${clientCoords?.name ?? ""}`} />
                 </div>
 
-                {/* Champs conditionnels : Coloration / Balayage */}
                 {needsColorInfo && (
                   <div className="bg-primary/5 border border-primary/15 rounded-3xl p-5 space-y-5">
                     <div className="flex items-center gap-2">
@@ -525,19 +546,23 @@ export default function Calculator() {
                 </p>
               )}
 
-              <button
-                type="submit"
-                disabled={isPending || !isFormValid}
-                className="hidden md:block w-full bg-primary hover:bg-primary-light disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium text-sm px-6 py-3.5 rounded-full transition-colors duration-200"
-                aria-busy={isPending}
-              >
-                {isPending ? "Envoi en cours…" : "Confirmer la réservation"}
-              </button>
+              <div className="hidden md:block">
+                {!canStep4Submit && helpText && (
+                  <p className="text-xs text-orange-500 text-center mb-3">{helpText}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={isPending || !canStep4Submit}
+                  className="w-full bg-primary hover:bg-primary-light disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-base py-4 rounded-2xl transition-colors duration-200"
+                  aria-busy={isPending}
+                >
+                  {btnLabel}
+                </button>
+              </div>
             </form>
           )}
         </div>
 
-        {/* Desktop sidebar summary */}
         <BookingSummary
           selectedBase={selectedBase}
           selectedAddonIds={selectedAddonIds}
@@ -548,13 +573,13 @@ export default function Calculator() {
         />
       </div>
 
-      {/* Mobile sticky price footer */}
       <StickyPriceFooter
         total={total}
         totalDuration={totalDuration}
         canAdvance={canAdvance}
         isPending={isPending}
         wizardStep={numericStep}
+        helpText={helpText}
         onAdvance={advanceStep}
       />
     </div>
@@ -566,6 +591,9 @@ export default function Calculator() {
 function ProgressBar({ labels, currentIndex }: { labels: string[]; currentIndex: number }) {
   return (
     <nav aria-label="Étapes de réservation">
+      <p className="text-xs text-text-main/50 text-center mb-3 font-medium">
+        Étape {currentIndex + 1} sur {labels.length}
+      </p>
       <ol className="flex items-center">
         {labels.map((label, i) => (
           <li key={label} className="flex items-center flex-1 last:flex-none">
@@ -595,43 +623,74 @@ function ProgressBar({ labels, currentIndex }: { labels: string[]; currentIndex:
   );
 }
 
+// ── STEP CTA (desktop, non-form steps) ───────────────────────────────────────
+
+function StepCTA({ label, canAdvance, helpText, onAdvance }: {
+  label: string;
+  canAdvance: boolean;
+  helpText: string | null;
+  onAdvance: () => void;
+}) {
+  return (
+    <div className="hidden md:block mt-8">
+      {!canAdvance && helpText && (
+        <p className="text-xs text-orange-500 text-center mb-3">{helpText}</p>
+      )}
+      <button
+        type="button"
+        onClick={onAdvance}
+        disabled={!canAdvance}
+        className="w-full bg-primary hover:bg-primary-light disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-base py-4 rounded-2xl transition-colors duration-200"
+      >
+        {label}
+      </button>
+    </div>
+  );
+}
+
 // ── MOBILE STICKY PRICE FOOTER ────────────────────────────────────────────────
-// z-30, bottom-16 → sits above BottomNav (z-40, h-14=56px, bottom-0)
 
 function StickyPriceFooter({
-  total, totalDuration, canAdvance, isPending, wizardStep, onAdvance,
+  total, totalDuration, canAdvance, isPending, wizardStep, helpText, onAdvance,
 }: {
   total: number;
   totalDuration: number;
   canAdvance: boolean;
   isPending: boolean;
-  wizardStep: 1 | 2 | 3;
+  wizardStep: 1 | 2 | 3 | 4;
+  helpText: string | null;
   onAdvance: () => void;
 }) {
-  const label = wizardStep === 3 ? (isPending ? "Envoi…" : "Confirmer") : "Continuer";
+  const label = wizardStep === 4 ? (isPending ? "Envoi en cours…" : "Confirmer ma réservation") : "Continuer";
 
   return (
-    <div className="md:hidden fixed bottom-14 left-0 right-0 z-30 px-4 py-2.5 bg-background-cream/80 backdrop-blur-sm border-t border-primary/10">
-      <div className="bg-primary rounded-3xl px-5 py-2.5 flex items-center justify-between gap-4 shadow-xl">
-        <div className="min-w-0">
-          <p className="text-white font-bold text-xl leading-tight">{total}€</p>
-          {totalDuration > 0 && (
-            <p className="text-white/60 text-xs flex items-center gap-1 mt-0.5">
-              <Clock size={10} aria-hidden="true" />
-              {formatDuration(totalDuration)}
-            </p>
-          )}
+    <div className="md:hidden fixed bottom-14 left-0 right-0 z-30 px-4 py-3 bg-background-cream/90 backdrop-blur-sm border-t border-primary/10">
+      {total > 0 && (
+        <div className="flex items-center justify-between mb-2 px-1">
+          <span className="text-sm text-text-main/60">Total estimé</span>
+          <div className="flex items-center gap-3">
+            {totalDuration > 0 && (
+              <span className="text-text-main/50 text-xs flex items-center gap-1">
+                <Clock size={10} aria-hidden="true" />
+                {formatDuration(totalDuration)}
+              </span>
+            )}
+            <span className="font-bold text-lg text-primary">{total}€</span>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={onAdvance}
-          disabled={!canAdvance || isPending}
-          className="bg-white text-primary font-semibold text-sm px-5 py-2.5 rounded-2xl disabled:opacity-40 disabled:cursor-not-allowed transition-opacity flex items-center gap-1.5 shrink-0"
-        >
-          {label}
-          {wizardStep !== 3 && <ChevronRight size={15} aria-hidden="true" />}
-        </button>
-      </div>
+      )}
+      {!canAdvance && helpText && (
+        <p className="text-xs text-orange-500 text-center mb-2">{helpText}</p>
+      )}
+      <button
+        type="button"
+        onClick={onAdvance}
+        disabled={!canAdvance || isPending}
+        className="w-full bg-primary hover:bg-primary-light disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-base py-4 rounded-2xl transition-colors duration-200 flex items-center justify-center gap-2"
+      >
+        {label}
+        {wizardStep !== 4 && <ChevronRight size={16} aria-hidden="true" />}
+      </button>
     </div>
   );
 }
