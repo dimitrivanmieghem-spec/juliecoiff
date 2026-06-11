@@ -16,6 +16,18 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      { source: "/nos-realisations",              destination: "/#portfolio",      permanent: true },
+      { source: "/tarifs",                        destination: "/services",         permanent: true },
+      { source: "/contactez-nous",                destination: "/contact",          permanent: true },
+      { source: "/prendre-rendez-vous",           destination: "/#booking",         permanent: true },
+      { source: "/politique-de-confidentialite",  destination: "/mentions-legales", permanent: true },
+      { source: "/politique-de-confidentialité",  destination: "/mentions-legales", permanent: true },
+      { source: "/service-page/:path*",           destination: "/services",         permanent: true },
+      { source: "/blog/:path*",                   destination: "/blog/:path*",      permanent: true },
+    ];
+  },
   async headers() {
     return [
       {
