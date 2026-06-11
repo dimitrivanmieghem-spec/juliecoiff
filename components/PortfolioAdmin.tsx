@@ -55,7 +55,9 @@ export default function PortfolioAdmin() {
 
       if (isHeic) {
         try {
-          const convertedBlob = await heic2any({ blob: originalFile, toType: "image/jpeg", quality: 0.8 });
+          const heicBuffer = await originalFile.arrayBuffer();
+          const heicBlob = new Blob([heicBuffer], { type: "image/heic" });
+          const convertedBlob = await heic2any({ blob: heicBlob, toType: "image/jpeg", quality: 0.8 });
           const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
           processableFile = new File([blob], originalFile.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
         } catch (err: unknown) {
@@ -63,7 +65,8 @@ export default function PortfolioAdmin() {
           if (msg.includes("already browser readable")) {
             processableFile = originalFile;
           } else {
-            throw new Error("Impossible de lire ce fichier HEIC depuis votre appareil. Veuillez essayer une autre photo.");
+            console.error("Échec complet de heic2any :", err);
+            throw new Error("Impossible de convertir ce fichier HEIC depuis votre ordinateur. L'erreur exacte est dans la console.");
           }
         }
       }
