@@ -50,18 +50,12 @@ export default function PortfolioAdmin() {
 
   async function processImage(originalFile: File): Promise<File | null> {
     try {
-      const isHeic = originalFile.type === "image/heic" || originalFile.name.toLowerCase().endsWith(".heic");
-      const isStandardImage = originalFile.type.startsWith("image/");
-
-      if (!isStandardImage && !isHeic) {
-        throw new Error("Le fichier sélectionné n'est pas une image valide.");
-      }
-
       let processableFile = originalFile;
+      const isHeic = originalFile.type === "image/heic" || originalFile.name.toLowerCase().endsWith(".heic");
 
       if (isHeic) {
         try {
-          const convertedBlob = await heic2any({ blob: originalFile, toType: "image/jpeg" });
+          const convertedBlob = await heic2any({ blob: originalFile, toType: "image/jpeg", quality: 0.8 });
           const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
           processableFile = new File([blob], originalFile.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
         } catch (err: unknown) {
@@ -69,14 +63,13 @@ export default function PortfolioAdmin() {
           if (msg.includes("already browser readable")) {
             processableFile = originalFile;
           } else {
-            console.error("Échec de la conversion HEIC :", err);
-            throw new Error("Impossible de lire cette photo iPhone. Veuillez essayer un autre fichier.");
+            throw new Error("Impossible de lire ce fichier HEIC depuis votre appareil. Veuillez essayer une autre photo.");
           }
         }
       }
 
       if (!processableFile.type.startsWith("image/")) {
-        throw new Error("Format d'image non reconnu avant la compression.");
+        throw new Error("Le format du fichier final n'est pas reconnu comme une image.");
       }
 
       const compressedBlob = await imageCompression(processableFile, {
@@ -88,11 +81,11 @@ export default function PortfolioAdmin() {
 
       return new File(
         [compressedBlob],
-        processableFile.name.replace(/\.(heic|jpg|jpeg|png)$/i, ".webp"),
+        processableFile.name.replace(/\.[^/.]+$/, ".webp"),
         { type: "image/webp" }
       );
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Une erreur inattendue s'est produite lors du traitement de l'image.";
+      const msg = error instanceof Error ? error.message : "Une erreur est survenue lors de la préparation de l'image.";
       alert(msg);
       return null;
     }
@@ -147,7 +140,7 @@ export default function PortfolioAdmin() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/heic,.heic"
+            accept="image/jpeg, image/png, image/webp, image/heic, .heic"
             className="hidden"
             id="portfolio-upload"
             onChange={handleUpload}
