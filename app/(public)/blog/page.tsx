@@ -5,9 +5,9 @@ import { Clock } from "lucide-react";
 import { articles } from "@/lib/blog-data";
 
 export const metadata: Metadata = {
-  title: "Conseils Coiffure & Actus | Julie Coiff",
+  title: "Conseils coiffure à Seneffe, Manage & Nivelles | Julie Coiff",
   description:
-    "Découvrez les conseils d'experte de Julie, votre coiffeuse à domicile dans la région de Seneffe, Manage et Nivelles.",
+    "Astuces, tendances et conseils d'experte de Julie, coiffeuse à domicile à Seneffe, Manage, Nivelles et La Louvière. Balayages, colorations et soins.",
 };
 
 export default function BlogPage() {

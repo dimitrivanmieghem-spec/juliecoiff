@@ -5,10 +5,11 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const navLinks = [
-  { href: "/",           label: "Accueil"   },
-  { href: "/#portfolio", label: "Portfolio" },
-  { href: "/#avis",      label: "Avis"      },
-  { href: "/blog",       label: "Conseils"  },
+  { href: "/",           label: "Accueil"      },
+  { href: "/services",   label: "Prestations"  },
+  { href: "/#portfolio", label: "Portfolio"    },
+  { href: "/#avis",      label: "Avis"         },
+  { href: "/blog",       label: "Conseils"     },
 ];
 
 const Navbar: React.FC = () => {
