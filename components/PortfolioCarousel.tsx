@@ -3,6 +3,15 @@
 import useEmblaCarousel from "embla-carousel-react";
 import Image from "next/image";
 
+const ALT_CITIES   = ["Seneffe", "Manage", "Nivelles", "La Louvière"];
+const ALT_SERVICES = ["Balayage professionnel", "Coloration sur mesure", "Coiffure mariage"];
+
+function buildAlt(index: number): string {
+  const city    = ALT_CITIES[index % ALT_CITIES.length];
+  const service = ALT_SERVICES[index % ALT_SERVICES.length];
+  return `Coiffure à domicile à ${city} - ${service}`;
+}
+
 export default function PortfolioCarousel({ images }: { images: string[] }) {
   const [emblaRef] = useEmblaCarousel({ loop: true, align: "start", dragFree: true });
 
@@ -17,7 +26,7 @@ export default function PortfolioCarousel({ images }: { images: string[] }) {
             <div className="relative aspect-square overflow-hidden rounded-xl shadow-sm group">
               <Image
                 src={url}
-                alt="Réalisation"
+                alt={buildAlt(i)}
                 fill
                 quality={75}
                 sizes="(max-width: 640px) 80vw, (max-width: 1024px) 50vw, 33vw"
