@@ -5,42 +5,45 @@ import { BASE_SERVICES, ADDONS } from "@/lib/data";
 export const metadata: Metadata = {
   title: "Prestations coiffure à domicile à Seneffe & Manage | Julie Coiff",
   description:
-    "Balayages, colorations, coupes et coiffures mariage à domicile à Seneffe, Manage, Nivelles et La Louvière. Tarifs transparents, matériel professionnel.",
+    "Balayages, colorations, coupes et soins à domicile à Seneffe, Manage, Nivelles et environs. Tarifs transparents, matériel professionnel.",
   openGraph: {
     title: "Prestations coiffure à domicile à Seneffe & Manage | Julie Coiff",
     description:
-      "Découvrez tous les services de Julie Coiff : balayages sur mesure, colorations, soins et coiffures événementielles à domicile dans la région de Seneffe.",
+      "Découvrez tous les services de Julie Coiff : coupes, colorations, soins et options à domicile dans la région de Seneffe.",
     url: "https://www.juliecoiff.be/services",
     siteName: "Julie Coiff",
     type: "website",
   },
 };
 
-const categories = [
+const femmeServices = BASE_SERVICES.filter((s) => s.category === "Femme");
+const hommeServices = BASE_SERVICES.filter((s) => s.category === "Homme");
+const enfantServices = BASE_SERVICES.filter((s) => s.category === "Enfant");
+
+const sections = [
   {
-    id: "colorations",
-    heading: "Balayage et colorations sur mesure à Seneffe",
-    description:
-      "Balayage californien, mèches, coloration permanente ou ton sur ton — Julie réalise vos techniques couleur avec des produits professionnels directement chez vous.",
-    services: ADDONS.filter((s) =>
-      ["Coloration", "Mèches", "Balayage", "Coulage"].includes(s.name)
-    ),
+    id: "femme",
+    heading: "Prestations Femme",
+    intro: "Toutes les prestations incluent un diagnostic personnalisé lors de ma visite à domicile.",
+    services: femmeServices,
   },
   {
-    id: "coupes",
-    heading: "Coupes & soins à domicile",
-    description:
-      "Shampoing, coupe, brushing et soins profonds réparateurs pour femme, homme et enfant — disponible à Manage, Nivelles, Ecaussinnes et environs.",
-    services: BASE_SERVICES,
+    id: "homme",
+    heading: "Prestations Homme",
+    intro: "Des coupes soignées et adaptées à votre style, réalisées directement chez vous.",
+    services: hommeServices,
   },
   {
-    id: "mariage",
-    heading: "Coiffure mariage et soins à Manage",
-    description:
-      "Chignons, permanentes et coiffures événementielles réalisés chez vous ou sur votre lieu de réception. Julie se déplace avec tout son matériel pour votre grand jour.",
-    services: ADDONS.filter((s) =>
-      ["Permanente (Cheveux courts)", "Permanente (Cheveux longs)", "Soin profond réparateur", "Supplément Fixant"].includes(s.name)
-    ),
+    id: "enfant",
+    heading: "Prestations Enfant",
+    intro: "Des services doux et adaptés aux enfants, dans la sécurité et le confort de votre domicile.",
+    services: enfantServices,
+  },
+  {
+    id: "options",
+    heading: "Options Coloration & Soins",
+    intro: "Ces options s'ajoutent à une prestation de base Femme selon vos envies et vos besoins.",
+    services: ADDONS,
   },
 ];
 
@@ -52,10 +55,10 @@ export default function ServicesPage() {
           Prestations
         </p>
         <h1 className="font-serif text-4xl md:text-5xl text-text-main font-semibold leading-tight max-w-3xl mx-auto">
-          Coiffure à domicile à&nbsp;Seneffe, Manage&nbsp;&amp;&nbsp;Nivelles
+          Coiffure à domicile à Seneffe et ses environs
         </h1>
         <p className="mt-5 text-base md:text-lg text-text-main/70 max-w-xl mx-auto leading-relaxed">
-          Tous les services d&apos;un salon professionnel, directement chez vous. Tarifs fixes, matériel haut de gamme, résultats garantis.
+          Une expertise professionnelle adaptée à vos besoins.
         </p>
         <div className="mt-8">
           <Link
@@ -67,21 +70,25 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      {categories.map((cat) => (
-        <section key={cat.id} id={cat.id} className="py-14 md:py-18 px-4 border-b border-primary/8 even:bg-white/40">
+      {sections.map((section, i) => (
+        <section
+          key={section.id}
+          id={section.id}
+          className={`py-14 md:py-18 px-4 border-b border-primary/8 ${i % 2 !== 0 ? "bg-white/40" : ""}`}
+        >
           <div className="max-w-4xl mx-auto">
             <h2 className="font-serif text-2xl md:text-3xl text-text-main font-semibold leading-tight mb-3">
-              {cat.heading}
+              {section.heading}
             </h2>
             <p className="text-sm text-text-main/60 leading-relaxed mb-8 max-w-2xl">
-              {cat.description}
+              {section.intro}
             </p>
             <div className="divide-y divide-primary/8 border border-primary/10 rounded-2xl overflow-hidden bg-white/60">
-              {cat.services.map((s) => (
+              {section.services.map((s) => (
                 <div key={s.id} className="flex items-center justify-between px-5 py-4">
                   <span className="text-sm text-text-main">{s.name}</span>
                   <span className="text-sm font-semibold text-primary whitespace-nowrap ml-4">
-                    {s.price}&nbsp;€
+                    {s.id.startsWith("a") ? "+" : ""}{s.price}&nbsp;€
                   </span>
                 </div>
               ))}
@@ -89,6 +96,14 @@ export default function ServicesPage() {
           </div>
         </section>
       ))}
+
+      <section className="py-14 md:py-18 px-4 border-b border-primary/8">
+        <div className="max-w-4xl mx-auto">
+          <p className="text-sm text-text-main/60 leading-relaxed max-w-2xl">
+            Besoin d&apos;un conseil avant de réserver ? Je réalise un diagnostic complet lors de ma venue pour adapter le service à vos envies et à la nature de vos cheveux.
+          </p>
+        </div>
+      </section>
 
       <section className="py-16 md:py-20 px-4 text-center bg-gradient-to-br from-primary/10 via-[#f5e0d5] to-primary/8">
         <h2 className="font-serif text-3xl md:text-4xl text-text-main font-semibold leading-tight max-w-xl mx-auto mb-5">
@@ -108,13 +123,13 @@ export default function ServicesPage() {
       <section className="px-4 py-10 bg-white/30 border-t border-primary/8">
         <div className="max-w-3xl mx-auto">
           <h2 className="font-serif text-xl text-text-main font-semibold mb-4">
-            Balayages et colorations à domicile — Seneffe, Manage, Nivelles, La Louvière
+            Coupes et colorations à domicile — Seneffe, Manage, Nivelles, La Louvière
           </h2>
           <p className="text-sm text-text-main/60 leading-relaxed">
             Vous cherchez un coiffeur à Seneffe, Manage, Nivelles ou La Louvière&nbsp;?
             Julie Coiff vous propose une expérience de salon haut de gamme, directement chez vous.
-            Profitez d&apos;un diagnostic personnalisé, de colorations professionnelles et de balayages
-            tendance sans le stress et l&apos;attente d&apos;un salon traditionnel.
+            Profitez d&apos;un diagnostic personnalisé, de colorations professionnelles et de soins
+            adaptés sans le stress et l&apos;attente d&apos;un salon traditionnel.
             Diplômée et passionnée, Julie intervient également à Feluy, Familleureux, Arquennes,
             Pont-à-Celles et Ecaussinnes avec tout le matériel professionnel nécessaire.
           </p>
