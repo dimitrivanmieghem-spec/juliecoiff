@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Clock, ArrowLeft } from "lucide-react";
+import DOMPurify from "isomorphic-dompurify";
 import { articles } from "@/lib/blog-data";
 
 interface Props {
@@ -85,7 +86,7 @@ export default async function ArticlePage({ params }: Props) {
 
       <div
         className="prose prose-stone max-w-none text-text-main/80 leading-relaxed text-[15px] [&_p]:mb-5 [&_h2]:font-serif [&_h2]:text-xl [&_h2]:text-text-main [&_h2]:font-semibold [&_h2]:mt-8 [&_h2]:mb-3 [&_strong]:text-text-main"
-        dangerouslySetInnerHTML={{ __html: article.content }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content) }}
       />
 
       <div className="mt-16 bg-gradient-to-br from-primary/10 via-[#f5e0d5] to-primary/5 border border-primary/15 rounded-2xl p-8 text-center">
