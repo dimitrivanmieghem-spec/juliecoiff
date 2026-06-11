@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Trash2, Loader2, ImagePlus, Images } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import imageCompression from "browser-image-compression";
+import heic2any from "heic2any";
 import { uploadPortfolioImage, deletePortfolioImage } from "@/app/actions/portfolio";
 
 const supabase = createClient(
@@ -51,14 +52,28 @@ export default function PortfolioAdmin() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const compressedFile = await imageCompression(file, {
-      maxSizeMB: 0.5,
+    let fileToUpload: File = file;
+
+    if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+      const convertedBlob = await heic2any({ blob: file, toType: "image/jpeg" });
+      const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+      fileToUpload = new File([blob], file.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
+    }
+
+    const compressedBlob = await imageCompression(fileToUpload, {
+      maxSizeMB: 0.4,
       maxWidthOrHeight: 1920,
       useWebWorker: true,
       fileType: "image/webp",
     });
+    const finalFile = new File(
+      [compressedBlob],
+      fileToUpload.name.replace(/\.(jpg|jpeg|png|heic)$/i, ".webp"),
+      { type: "image/webp" }
+    );
+
     const formData = new FormData();
-    formData.append("file", compressedFile);
+    formData.append("file", finalFile);
     const result = await uploadPortfolioImage(formData);
     if (result.url && result.fileName) {
       setImages((prev) => [
@@ -94,7 +109,7 @@ export default function PortfolioAdmin() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/jpeg,image/png,image/webp,image/heic,.heic"
             className="hidden"
             id="portfolio-upload"
             onChange={handleUpload}
