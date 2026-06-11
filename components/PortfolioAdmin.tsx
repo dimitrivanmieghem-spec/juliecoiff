@@ -5,7 +5,6 @@ import Image from "next/image";
 import { Trash2, Loader2, ImagePlus, Images } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import imageCompression from "browser-image-compression";
-import heic2any from "heic2any";
 import { uploadPortfolioImage, deletePortfolioImage } from "@/app/actions/portfolio";
 
 const supabase = createClient(
@@ -55,24 +54,25 @@ export default function PortfolioAdmin() {
 
       if (isHeic) {
         try {
+          const heic2any = (await import("heic2any")).default;
           const heicBuffer = await originalFile.arrayBuffer();
           const heicBlob = new Blob([heicBuffer], { type: "image/heic" });
           const convertedBlob = await heic2any({ blob: heicBlob, toType: "image/jpeg", quality: 0.8 });
           const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
           processableFile = new File([blob], originalFile.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
         } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : "";
-          if (msg.includes("already browser readable")) {
+          const errorMsg = err instanceof Error ? err.message : JSON.stringify(err);
+          if (errorMsg.includes("already browser readable")) {
             processableFile = originalFile;
           } else {
-            console.error("Échec complet de heic2any :", err);
-            throw new Error("Impossible de convertir ce fichier HEIC depuis votre ordinateur. L'erreur exacte est dans la console.");
+            console.error("Détail critique du crash HEIC :", err);
+            throw new Error("Cette photo HEIC d'Apple utilise un format trop complexe pour être convertie sur PC. Veuillez utiliser une photo JPEG pour garantir l'affichage sur le site.");
           }
         }
       }
 
       if (!processableFile.type.startsWith("image/")) {
-        throw new Error("Le format du fichier final n'est pas reconnu comme une image.");
+        throw new Error("Le fichier généré n'est pas une image valide pour le web.");
       }
 
       const compressedBlob = await imageCompression(processableFile, {
@@ -88,7 +88,7 @@ export default function PortfolioAdmin() {
         { type: "image/webp" }
       );
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Une erreur est survenue lors de la préparation de l'image.";
+      const msg = error instanceof Error ? error.message : "Une erreur inattendue a bloqué le traitement.";
       alert(msg);
       return null;
     }
